@@ -1,55 +1,32 @@
 import { useState } from "react";
 
 import {
-  LayoutDashboard,
-  FolderKanban,
-  ShieldCheck,
-  Map,
-  Satellite,
-  BrainCircuit,
-  FileClock,
-  Settings,
-  Search,
-  Bell,
-  Plus,
-  ArrowUpRight,
-  MapPin,
-  AlertTriangle,
-  CheckCircle2,
-  Clock3,
-  Leaf,
   Activity,
+  AlertTriangle,
+  Brain,
+  CheckCircle2,
+  Database,
+  FileCheck2,
+  FileText,
+  Leaf,
+  MapPin,
+  Plus,
+  Satellite,
+  ShieldCheck,
+  UserCheck,
   X,
-  Upload,
-  CalendarDays,
-  MapPinned,
 } from "lucide-react";
 
-import "./App.css";
-
 function App() {
-  const [showProjectForm, setShowProjectForm] = useState(false);
+  // -----------------------------
+  // Navigation
+  // -----------------------------
+  const [activePage, setActivePage] = useState("Dashboard");
 
-  const [projects, setProjects] = useState([
-    {
-      id: "BC-MANGROVE-001",
-      name: "Coastal Mangrove Restoration",
-      location: "Gujarat, India",
-      status: "Verified",
-    },
-    {
-      id: "BC-MANGROVE-002",
-      name: "Sundarbans Restoration Zone",
-      location: "West Bengal, India",
-      status: "Under Review",
-    },
-    {
-      id: "BC-MANGROVE-003",
-      name: "Coastal Blue Carbon Initiative",
-      location: "Odisha, India",
-      status: "Attention",
-    },
-  ]);
+  // -----------------------------
+  // Project Modal
+  // -----------------------------
+  const [showProjectForm, setShowProjectForm] = useState(false);
 
   const [formData, setFormData] = useState({
     projectName: "",
@@ -59,9 +36,45 @@ function App() {
     restorationDate: "",
     latitude: "",
     longitude: "",
-    geojson: null,
+    geojson: "",
   });
 
+  // -----------------------------
+  // Demo Projects
+  // -----------------------------
+  const [projects, setProjects] = useState([
+    {
+      id: 1,
+      name: "Sundarbans Mangrove Restoration",
+      owner: "Green Earth Foundation",
+      area: 25,
+      carbon: 2850,
+      status: "Under Verification",
+      risk: "MEDIUM",
+    },
+    {
+      id: 2,
+      name: "Coastal Blue Carbon Initiative",
+      owner: "Ocean Conservation Group",
+      area: 18.5,
+      carbon: 2140,
+      status: "Verified",
+      risk: "LOW",
+    },
+    {
+      id: 3,
+      name: "Mangrove Recovery Project",
+      owner: "Blue Planet Initiative",
+      area: 32,
+      carbon: 3675,
+      status: "Needs Review",
+      risk: "HIGH",
+    },
+  ]);
+
+  // -----------------------------
+  // Form Input
+  // -----------------------------
   const handleInputChange = (event) => {
     const { name, value } = event.target;
 
@@ -71,17 +84,34 @@ function App() {
     }));
   };
 
+  // -----------------------------
+  // GeoJSON Upload
+  // -----------------------------
   const handleGeoJSON = (event) => {
     const file = event.target.files?.[0];
 
     if (!file) return;
 
-    setFormData((previous) => ({
-      ...previous,
-      geojson: file,
-    }));
+    if (!file.name.toLowerCase().endsWith(".geojson")) {
+      alert("Please upload a .geojson file.");
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      setFormData((previous) => ({
+        ...previous,
+        geojson: e.target?.result || "",
+      }));
+    };
+
+    reader.readAsText(file);
   };
 
+  // -----------------------------
+  // Create Project
+  // -----------------------------
   const handleCreateProject = (event) => {
     event.preventDefault();
 
@@ -89,22 +119,20 @@ function App() {
       !formData.projectName ||
       !formData.owner ||
       !formData.claimedArea ||
-      !formData.restorationDate
+      !formData.carbonBenefit
     ) {
-      alert(
-        "Please fill Project Name, Project Owner, Claimed Area and Restoration Date."
-      );
+      alert("Please fill all required fields.");
       return;
     }
 
     const newProject = {
-      id: `BC-MANGROVE-${String(projects.length + 1).padStart(3, "0")}`,
+      id: Date.now(),
       name: formData.projectName,
-      location:
-        formData.latitude && formData.longitude
-          ? `${formData.latitude}, ${formData.longitude}`
-          : "Location pending",
-      status: "Under Review",
+      owner: formData.owner,
+      area: Number(formData.claimedArea),
+      carbon: Number(formData.carbonBenefit),
+      status: "Under Verification",
+      risk: "PENDING",
     };
 
     setProjects((previous) => [newProject, ...previous]);
@@ -117,813 +145,856 @@ function App() {
       restorationDate: "",
       latitude: "",
       longitude: "",
-      geojson: null,
+      geojson: "",
     });
 
     setShowProjectForm(false);
+    setActivePage("Projects");
 
+    alert("Project created successfully.");
+  };
+
+  // -----------------------------
+  // Button Actions
+  // -----------------------------
+  const handleRequestEvidence = () => {
     alert(
-      "Project created successfully. It has been added to the verification queue."
+      "Additional evidence has been requested from the project owner."
     );
   };
 
+  const handleApproveReview = () => {
+    alert("Verification review approved successfully.");
+  };
+
+  const handleAnalyzeEvidence = () => {
+    alert("Satellite / GIS evidence analysis started.");
+  };
+
+  const handleDetailedReport = () => {
+    alert("Detailed risk report opened.");
+  };
+
+  const handleSendVerification = () => {
+    alert("Project has been sent for human verification.");
+  };
+
+  // -----------------------------
+  // Navigation Items
+  // -----------------------------
+  const navigationItems = [
+    {
+      name: "Dashboard",
+      icon: Activity,
+    },
+    {
+      name: "Projects",
+      icon: Database,
+    },
+    {
+      name: "Geo Evidence",
+      icon: MapPin,
+    },
+    {
+      name: "Verification",
+      icon: ShieldCheck,
+    },
+    {
+      name: "Risk Analysis",
+      icon: AlertTriangle,
+    },
+  ];
+
+  // -----------------------------
+  // Dashboard
+  // -----------------------------
+  const renderDashboard = () => {
+    const totalArea = projects.reduce(
+      (sum, project) => sum + Number(project.area || 0),
+      0
+    );
+
+    const totalCarbon = projects.reduce(
+      (sum, project) => sum + Number(project.carbon || 0),
+      0
+    );
+
+    return (
+      <>
+        <section className="page-header">
+          <div>
+            <div className="eyebrow">BLUE CARBON VERIFICATION</div>
+
+            <h1>Verification Dashboard</h1>
+
+            <p>
+              AI-assisted integrity analysis for blue carbon restoration
+              claims.
+            </p>
+          </div>
+
+          <button
+            className="primary-button"
+            onClick={() => setShowProjectForm(true)}
+          >
+            <Plus size={18} />
+            New Project
+          </button>
+        </section>
+
+        {/* Statistics */}
+        <section className="stats-grid">
+          <div className="stat-card">
+            <div className="stat-icon">
+              <Database size={24} />
+            </div>
+
+            <div className="stat-label">Total Projects</div>
+
+            <div className="stat-value">{projects.length}</div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-icon">
+              <MapPin size={24} />
+            </div>
+
+            <div className="stat-label">Area Under Review</div>
+
+            <div className="stat-value">
+              {totalArea.toFixed(1)}
+              <span> ha</span>
+            </div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-icon">
+              <Leaf size={24} />
+            </div>
+
+            <div className="stat-label">Reported Carbon Benefit</div>
+
+            <div className="stat-value">
+              {totalCarbon.toLocaleString()}
+              <span> tCO₂e</span>
+            </div>
+          </div>
+        </section>
+
+        {/* Recent Projects */}
+        <section className="content-section">
+          <div className="section-heading">
+            <div>
+              <h2>Recent Projects</h2>
+              <p>Submitted blue carbon restoration claims</p>
+            </div>
+
+            <button
+              className="secondary-button"
+              onClick={() => setActivePage("Projects")}
+            >
+              View All
+            </button>
+          </div>
+
+          <div className="projects-list">
+            {projects.map((project) => (
+              <div
+                className="project-card"
+                key={project.id}
+                onClick={() => setActivePage("Projects")}
+                style={{ cursor: "pointer" }}
+              >
+                <div className="project-icon">
+                  <Leaf size={22} />
+                </div>
+
+                <div className="project-main">
+                  <h3>{project.name}</h3>
+
+                  <p>{project.owner}</p>
+
+                  <div className="project-meta">
+                    <span>
+                      <MapPin size={15} />
+                      {project.area} ha
+                    </span>
+
+                    <span>
+                      <Leaf size={15} />
+                      {project.carbon} tCO₂e
+                    </span>
+                  </div>
+                </div>
+
+                <div className="project-status">
+                  <span>{project.status}</span>
+
+                  <strong>{project.risk}</strong>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Verification Pipeline */}
+        <section className="content-section">
+          <div className="section-heading">
+            <div>
+              <h2>AI Verification Engine</h2>
+              <p>Current verification pipeline</p>
+            </div>
+          </div>
+
+          <div className="pipeline-grid">
+            <div className="pipeline-card">
+              <span>01</span>
+              <FileText size={25} />
+              <h3>Claim Submitted</h3>
+              <p>Project data received</p>
+            </div>
+
+            <div className="pipeline-card">
+              <span>02</span>
+              <Satellite size={25} />
+              <h3>Evidence Analysis</h3>
+              <p>Geospatial evidence processed</p>
+            </div>
+
+            <div className="pipeline-card">
+              <span>03</span>
+              <Brain size={25} />
+              <h3>AI Risk Analysis</h3>
+              <p>Checking claim consistency</p>
+            </div>
+
+            <div className="pipeline-card">
+              <span>04</span>
+              <UserCheck size={25} />
+              <h3>Human Verification</h3>
+              <p>Final verifier decision</p>
+            </div>
+          </div>
+        </section>
+      </>
+    );
+  };
+
+  // -----------------------------
+  // Projects
+  // -----------------------------
+  const renderProjects = () => {
+    return (
+      <>
+        <section className="page-header">
+          <div>
+            <div className="eyebrow">PROJECT MANAGEMENT</div>
+
+            <h1>Blue Carbon Projects</h1>
+
+            <p>
+              Review and manage submitted restoration claims.
+            </p>
+          </div>
+
+          <button
+            className="primary-button"
+            onClick={() => setShowProjectForm(true)}
+          >
+            <Plus size={18} />
+            New Project
+          </button>
+        </section>
+
+        <section className="content-section">
+          <div className="projects-list">
+            {projects.map((project) => (
+              <div className="project-card" key={project.id}>
+                <div className="project-icon">
+                  <Leaf size={22} />
+                </div>
+
+                <div className="project-main">
+                  <h3>{project.name}</h3>
+
+                  <p>{project.owner}</p>
+
+                  <div className="project-meta">
+                    <span>
+                      <MapPin size={15} />
+                      {project.area} ha
+                    </span>
+
+                    <span>
+                      <Leaf size={15} />
+                      {project.carbon} tCO₂e
+                    </span>
+                  </div>
+                </div>
+
+                <div className="project-status">
+                  <span>{project.status}</span>
+
+                  <strong>{project.risk}</strong>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </>
+    );
+  };
+
+  // -----------------------------
+  // Geo Evidence
+  // -----------------------------
+  const renderGeoEvidence = () => {
+    return (
+      <>
+        <section className="page-header">
+          <div>
+            <div className="eyebrow">GEOSPATIAL ANALYSIS</div>
+
+            <h1>Geo Evidence</h1>
+
+            <p>
+              Project boundary and satellite evidence analysis.
+            </p>
+          </div>
+        </section>
+
+        <section className="content-section">
+          <div className="evidence-card">
+            <div className="section-heading">
+              <div>
+                <h2>Satellite / GIS Evidence</h2>
+
+                <p>
+                  Evidence area associated with the selected project.
+                </p>
+              </div>
+
+              <button
+                className="primary-button"
+                onClick={handleAnalyzeEvidence}
+              >
+                <Satellite size={18} />
+                Analyze Evidence
+              </button>
+            </div>
+
+            <div className="map-placeholder">
+              <MapPin size={30} />
+
+              <span>Satellite / GIS evidence area</span>
+
+              <small>
+                Sentinel-2 / Landsat integration will be connected here.
+              </small>
+            </div>
+          </div>
+        </section>
+
+        <section className="content-section">
+          <div className="analysis-grid">
+            <div className="analysis-card">
+              <MapPin size={24} />
+
+              <span>Spatial Consistency</span>
+
+              <strong>87%</strong>
+
+              <p>
+                Comparison between submitted boundary and available
+                geospatial evidence.
+              </p>
+            </div>
+
+            <div className="analysis-card">
+              <FileCheck2 size={24} />
+
+              <span>Evidence Coverage</span>
+
+              <strong>92%</strong>
+
+              <p>
+                Evidence available for the current project assessment.
+              </p>
+            </div>
+          </div>
+        </section>
+      </>
+    );
+  };
+
+  // -----------------------------
+  // Verification
+  // -----------------------------
+  const renderVerification = () => {
+    return (
+      <>
+        <section className="page-header">
+          <div>
+            <div className="eyebrow">HUMAN-IN-THE-LOOP</div>
+
+            <h1>Verification Dashboard</h1>
+
+            <p>
+              AI findings support the verifier. Final decision remains
+              with the authorized human verifier.
+            </p>
+          </div>
+        </section>
+
+        <section className="content-section">
+          <div className="verification-grid">
+            <div className="verification-card">
+              <div className="verification-icon">
+                <ShieldCheck size={25} />
+              </div>
+
+              <span>AI Verification Confidence</span>
+
+              <strong>91%</strong>
+
+              <p>
+                Explainable assessment confidence based on available
+                evidence.
+              </p>
+            </div>
+
+            <div className="verification-card">
+              <div className="verification-icon">
+                <MapPin size={25} />
+              </div>
+
+              <span>Spatial Consistency</span>
+
+              <strong>87%</strong>
+
+              <p>
+                Claimed project boundary compared with geospatial
+                evidence.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="content-section">
+          <div className="decision-card">
+            <div>
+              <div className="eyebrow">HUMAN-IN-THE-LOOP</div>
+
+              <h2>Final Verification Decision</h2>
+
+              <p>
+                AI findings support the verifier. The final project
+                decision remains with the authorized human verifier.
+              </p>
+            </div>
+
+            <div className="decision-actions">
+              <button
+                className="secondary-button"
+                onClick={handleRequestEvidence}
+              >
+                <FileText size={18} />
+                Request Evidence
+              </button>
+
+              <button
+                className="primary-button"
+                onClick={handleApproveReview}
+              >
+                <CheckCircle2 size={18} />
+                Approve Review
+              </button>
+            </div>
+          </div>
+        </section>
+      </>
+    );
+  };
+
+  // -----------------------------
+  // Risk Analysis
+  // -----------------------------
+  const renderRiskAnalysis = () => {
+    return (
+      <>
+        <section className="page-header">
+          <div>
+            <div className="eyebrow">AI-ASSISTED ANALYSIS</div>
+
+            <h1>Risk Analysis</h1>
+
+            <p>
+              Identify inconsistencies and claims requiring additional
+              review.
+            </p>
+          </div>
+        </section>
+
+        <section className="stats-grid">
+          <div className="stat-card">
+            <div className="stat-icon">
+              <MapPin size={24} />
+            </div>
+
+            <div className="stat-label">Geospatial Evidence</div>
+
+            <div className="stat-value">87%</div>
+
+            <p>Spatial consistency score</p>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-icon">
+              <AlertTriangle size={24} />
+            </div>
+
+            <div className="stat-label">Anomaly Detection</div>
+
+            <div className="stat-value">3</div>
+
+            <p>Claims requiring attention</p>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-icon">
+              <ShieldCheck size={24} />
+            </div>
+
+            <div className="stat-label">AI Confidence</div>
+
+            <div className="stat-value">91%</div>
+
+            <p>Explainable assessment confidence</p>
+          </div>
+        </section>
+
+        <section className="content-section">
+          <div className="risk-card">
+            <div className="section-heading">
+              <div>
+                <h2>Risk Assessment</h2>
+
+                <p>Current project integrity indicator</p>
+              </div>
+
+              <span className="risk-badge">24 / 100</span>
+            </div>
+
+            <div className="risk-progress">
+              <div
+                className="risk-progress-fill"
+                style={{ width: "24%" }}
+              ></div>
+            </div>
+
+            <div className="risk-factors">
+              <div>
+                <AlertTriangle size={18} />
+
+                <span>Claim consistency</span>
+
+                <strong>Medium</strong>
+              </div>
+
+              <div>
+                <MapPin size={18} />
+
+                <span>Spatial overlap</span>
+
+                <strong>87%</strong>
+              </div>
+
+              <div>
+                <Brain size={18} />
+
+                <span>Anomaly signals</span>
+
+                <strong>3</strong>
+              </div>
+            </div>
+
+            <div
+              className="decision-actions"
+              style={{ marginTop: "24px" }}
+            >
+              <button
+                className="secondary-button"
+                onClick={handleDetailedReport}
+              >
+                <FileText size={18} />
+                View Detailed Report
+              </button>
+
+              <button
+                className="primary-button"
+                onClick={handleSendVerification}
+              >
+                <UserCheck size={18} />
+                Send for Verification
+              </button>
+            </div>
+          </div>
+        </section>
+      </>
+    );
+  };
+
+  // -----------------------------
+  // Current Page
+  // -----------------------------
+  const renderPage = () => {
+    switch (activePage) {
+      case "Projects":
+        return renderProjects();
+
+      case "Geo Evidence":
+        return renderGeoEvidence();
+
+      case "Verification":
+        return renderVerification();
+
+      case "Risk Analysis":
+        return renderRiskAnalysis();
+
+      case "Dashboard":
+      default:
+        return renderDashboard();
+    }
+  };
+
   return (
-    <div className="app">
-
-      {/* ================= SIDEBAR ================= */}
-
+    <div className="app-shell">
+      {/* =========================
+          SIDEBAR
+      ========================= */}
       <aside className="sidebar">
-
         <div className="brand">
-
           <div className="brand-icon">
-            <Leaf size={22} />
+            <Leaf size={30} />
           </div>
 
           <div>
             <h2>CarbonX</h2>
-            <span>AI Integrity Platform</span>
+
+            <p>AI Integrity Platform</p>
           </div>
-
         </div>
 
-        <div className="menu-section">
+        <nav className="sidebar-nav">
+          {navigationItems.map((item) => {
+            const Icon = item.icon;
 
-          <p className="menu-title">
-            WORKSPACE
-          </p>
+            const isActive = activePage === item.name;
 
-          <NavItem
-            icon={<LayoutDashboard />}
-            text="Dashboard"
-            active
-          />
+            return (
+              <button
+                key={item.name}
+                type="button"
+                className={`nav-item ${
+                  isActive ? "active" : ""
+                }`}
+                onClick={() => setActivePage(item.name)}
+              >
+                <Icon size={22} />
 
-          <NavItem
-            icon={<FolderKanban />}
-            text="Projects"
-          />
+                <span>{item.name}</span>
+              </button>
+            );
+          })}
+        </nav>
 
-          <NavItem
-            icon={<ShieldCheck />}
-            text="Verification"
-          />
+        <div className="system-status">
+          <span className="status-dot"></span>
 
-          <NavItem
-            icon={<Map />}
-            text="Geo Evidence"
-          />
-
-          <NavItem
-            icon={<Satellite />}
-            text="Satellite Data"
-          />
-
-          <NavItem
-            icon={<BrainCircuit />}
-            text="AI Analysis"
-          />
-
+          <span>System Operational</span>
         </div>
-
-        <div className="menu-section">
-
-          <p className="menu-title">
-            SYSTEM
-          </p>
-
-          <NavItem
-            icon={<FileClock />}
-            text="Audit Trail"
-          />
-
-          <NavItem
-            icon={<Settings />}
-            text="Settings"
-          />
-
-        </div>
-
-        <div className="sidebar-bottom">
-
-          <div className="secure-box">
-
-            <div className="secure-icon">
-              <ShieldCheck size={18} />
-            </div>
-
-            <div>
-              <strong>
-                Integrity Layer
-              </strong>
-
-              <span>
-                System protected
-              </span>
-            </div>
-
-            <div className="online-dot"></div>
-
-          </div>
-
-        </div>
-
       </aside>
 
-      {/* ================= MAIN ================= */}
-
-      <main className="main">
-
-        {/* TOPBAR */}
-
-        <header className="topbar">
-
-          <div className="search">
-
-            <Search size={18} />
-
-            <input
-              type="text"
-              placeholder="Search projects, claims, verification..."
-            />
-
-          </div>
-
-          <div className="top-actions">
-
-            <button className="icon-button">
-              <Bell size={19} />
-              <span className="notification-dot"></span>
-            </button>
-
-            <div className="profile">
-
-              <div className="avatar">
-                SP
-              </div>
-
-              <div>
-                <strong>
-                  Shreya Prajapati
-                </strong>
-
-                <span>
-                  Project Lead
-                </span>
-              </div>
-
-            </div>
-
-          </div>
-
-        </header>
-
-        {/* ================= CONTENT ================= */}
-
-        <section className="content">
-
-          <div className="page-heading">
-
-            <div>
-
-              <div className="eyebrow">
-
-                <Activity size={15} />
-
-                LIVE INTEGRITY MONITOR
-
-              </div>
-
-              <h1>
-                CarbonX Command Center
-              </h1>
-
-              <p>
-                AI-assisted verification of blue carbon restoration
-                claims using geospatial and satellite evidence.
-              </p>
-
-            </div>
-
-            {/* NEW PROJECT */}
-
-            <button
-              className="primary-button"
-              onClick={() => setShowProjectForm(true)}
-            >
-
-              <Plus size={18} />
-
-              New Project
-
-            </button>
-
-          </div>
-
-          {/* ================= STAT CARDS ================= */}
-
-          <div className="stats-grid">
-
-            <StatCard
-              icon={<FolderKanban />}
-              label="Total Projects"
-              value={projects.length}
-              change="+12.5%"
-              type="green"
-            />
-
-            <StatCard
-              icon={<ShieldCheck />}
-              label="Verified Claims"
-              value="18"
-              change="+8.2%"
-              type="blue"
-            />
-
-            <StatCard
-              icon={<AlertTriangle />}
-              label="Needs Review"
-              value="06"
-              change="3 urgent"
-              type="orange"
-            />
-
-            <StatCard
-              icon={<Activity />}
-              label="Integrity Score"
-              value="87.4"
-              change="+4.8%"
-              type="purple"
-            />
-
-          </div>
-
-          {/* ================= MAIN GRID ================= */}
-
-          <div className="dashboard-grid">
-
-            {/* MAP */}
-
-            <div className="card map-card">
-
-              <div className="card-header">
-
-                <div>
-
-                  <div className="card-label">
-                    GEOSPATIAL EVIDENCE
-                  </div>
-
-                  <h3>
-                    Project Monitoring Map
-                  </h3>
-
-                </div>
-
-                <button className="ghost-button">
-
-                  View Map
-
-                  <ArrowUpRight size={15} />
-
-                </button>
-
-              </div>
-
-              <div className="map-area">
-
-                <div className="map-grid"></div>
-
-                <div className="map-shape shape-one"></div>
-
-                <div className="map-shape shape-two"></div>
-
-                <div className="map-pin pin-one">
-                  <MapPin size={17} />
-                </div>
-
-                <div className="map-pin pin-two">
-                  <MapPin size={17} />
-                </div>
-
-                <div className="map-overlay">
-
-                  <span className="live-indicator"></span>
-
-                  Sentinel-2 Evidence Layer
-
-                </div>
-
-              </div>
-
-            </div>
-
-            {/* AI RISK */}
-
-            <div className="card risk-card">
-
-              <div className="card-header">
-
-                <div>
-
-                  <div className="card-label">
-                    AI ANALYSIS
-                  </div>
-
-                  <h3>
-                    Integrity Assessment
-                  </h3>
-
-                </div>
-
-                <BrainCircuit
-                  size={22}
-                  className="header-icon"
-                />
-
-              </div>
-
-              <div className="risk-score">
-
-                <div className="score-ring">
-
-                  <div>
-
-                    <strong>
-                      87
-                    </strong>
-
-                    <span>
-                      /100
-                    </span>
-
-                  </div>
-
-                </div>
-
-                <div className="score-info">
-
-                  <span className="low-risk">
-                    LOW RISK
-                  </span>
-
-                  <h4>
-                    Assessment Stable
-                  </h4>
-
-                  <p>
-                    Evidence consistency is within the expected range.
-                  </p>
-
-                </div>
-
-              </div>
-
-              <div className="risk-factors">
-
-                <Factor
-                  name="Evidence Completeness"
-                  value="82%"
-                  progress="82%"
-                />
-
-                <Factor
-                  name="Historical Consistency"
-                  value="91%"
-                  progress="91%"
-                />
-
-                <Factor
-                  name="Spatial Consistency"
-                  value="88%"
-                  progress="88%"
-                />
-
-              </div>
-
-            </div>
-
-          </div>
-
-          {/* ================= PROJECTS ================= */}
-
-          <div className="bottom-grid">
-
-            <div className="card projects-card">
-
-              <div className="card-header">
-
-                <div>
-
-                  <div className="card-label">
-                    PROJECT PORTFOLIO
-                  </div>
-
-                  <h3>
-                    Recent Verification Activity
-                  </h3>
-
-                </div>
-
-                <button className="text-button">
-                  View all
-                </button>
-
-              </div>
-
-              {projects.map((project) => (
-
-                <ProjectRow
-                  key={project.id}
-                  id={project.id}
-                  name={project.name}
-                  location={project.location}
-                  status={project.status}
-                  icon={
-                    project.status === "Verified"
-                      ? <CheckCircle2 />
-                      : project.status === "Attention"
-                        ? <AlertTriangle />
-                        : <Clock3 />
-                  }
-                />
-
-              ))}
-
-            </div>
-
-            {/* SUMMARY */}
-
-            <div className="card summary-card">
-
-              <div className="card-label">
-                VERIFICATION SUMMARY
-              </div>
-
-              <h3>
-                Current Evidence Health
-              </h3>
-
-              <div className="health-bar">
-
-                <div className="health-fill"></div>
-
-              </div>
-
-              <div className="health-values">
-
-                <strong>
-                  78.4
-                </strong>
-
-                <span>
-                  Overall assessment
-                </span>
-
-              </div>
-
-              <div className="summary-items">
-
-                <div>
-
-                  <span>
-                    Satellite evidence
-                  </span>
-
-                  <strong>
-                    92%
-                  </strong>
-
-                </div>
-
-                <div>
-
-                  <span>
-                    Spatial consistency
-                  </span>
-
-                  <strong>
-                    88%
-                  </strong>
-
-                </div>
-
-                <div>
-
-                  <span>
-                    Claim consistency
-                  </span>
-
-                  <strong>
-                    76%
-                  </strong>
-
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
-
-          <footer>
-
-            <span>
-              CarbonX AI v1.0
-            </span>
-
-            <span>
-              AI-assisted verification • Human-in-the-loop
-            </span>
-
-            <span>
-              ● Systems operational
-            </span>
-
-          </footer>
-
-        </section>
-
-      </main>
-
-      {/* ================================================= */}
-      {/* NEW PROJECT MODAL */}
-      {/* ================================================= */}
-
+      {/* =========================
+          MAIN CONTENT
+      ========================= */}
+      <main className="main-content">{renderPage()}</main>
+
+      {/* =========================
+          NEW PROJECT MODAL
+      ========================= */}
       {showProjectForm && (
-
         <div
           className="modal-backdrop"
           onClick={() => setShowProjectForm(false)}
         >
-
           <div
             className="project-modal"
             onClick={(event) => event.stopPropagation()}
           >
-
-            {/* MODAL HEADER */}
-
             <div className="modal-header">
-
               <div>
-
                 <div className="modal-eyebrow">
                   PROJECT REGISTRATION
                 </div>
 
-                <h2>
-                  Create Blue Carbon Project
-                </h2>
+                <h2>Create New Project</h2>
 
                 <p>
-                  Submit project information for CarbonX integrity analysis.
+                  Submit blue carbon restoration claim details.
                 </p>
-
               </div>
 
               <button
+                type="button"
                 className="modal-close"
                 onClick={() => setShowProjectForm(false)}
               >
                 <X size={20} />
               </button>
-
             </div>
-
-            {/* FORM */}
 
             <form
               className="project-form"
               onSubmit={handleCreateProject}
             >
-
               <div className="form-grid">
+                <div className="form-field">
+                  <label>Project Name *</label>
 
-                {/* PROJECT NAME */}
-
-                <div className="form-field full">
-
-                  <label>
-                    Project Name
-                  </label>
-
-                  <div className="input-wrapper">
-
-                    <FolderKanban size={16} />
-
-                    <input
-                      type="text"
-                      name="projectName"
-                      value={formData.projectName}
-                      onChange={handleInputChange}
-                      placeholder="e.g. Coastal Mangrove Restoration"
-                    />
-
-                  </div>
-
+                  <input
+                    type="text"
+                    name="projectName"
+                    value={formData.projectName}
+                    onChange={handleInputChange}
+                    placeholder="e.g. Sundarbans Restoration"
+                    required
+                  />
                 </div>
 
-                {/* OWNER */}
-
                 <div className="form-field">
-
-                  <label>
-                    Project Owner
-                  </label>
+                  <label>Project Owner *</label>
 
                   <input
                     type="text"
                     name="owner"
                     value={formData.owner}
                     onChange={handleInputChange}
-                    placeholder="Organization / Owner"
+                    placeholder="Organization / Project Owner"
+                    required
                   />
-
                 </div>
 
-                {/* AREA */}
-
                 <div className="form-field">
+                  <label>Claimed Restoration Area *</label>
 
-                  <label>
-                    Claimed Restoration Area
-                  </label>
-
-                  <div className="input-with-unit">
-
+                  <div className="input-wrapper">
                     <input
                       type="number"
-                      min="0"
-                      step="0.01"
                       name="claimedArea"
                       value={formData.claimedArea}
                       onChange={handleInputChange}
-                      placeholder="25.0"
-                    />
-
-                    <span>
-                      ha
-                    </span>
-
-                  </div>
-
-                </div>
-
-                {/* CARBON BENEFIT */}
-
-                <div className="form-field">
-
-                  <label>
-                    Claimed Carbon Benefit
-                  </label>
-
-                  <div className="input-with-unit">
-
-                    <input
-                      type="number"
+                      placeholder="25"
                       min="0"
                       step="0.01"
+                      required
+                    />
+
+                    <span>ha</span>
+                  </div>
+                </div>
+
+                <div className="form-field">
+                  <label>Claimed Carbon Benefit *</label>
+
+                  <div className="input-wrapper">
+                    <input
+                      type="number"
                       name="carbonBenefit"
                       value={formData.carbonBenefit}
                       onChange={handleInputChange}
                       placeholder="2850"
+                      min="0"
+                      step="0.01"
+                      required
                     />
 
-                    <span>
-                      tCO₂e
-                    </span>
-
+                    <span>tCO₂e</span>
                   </div>
-
                 </div>
-
-                {/* DATE */}
 
                 <div className="form-field">
+                  <label>Restoration Date</label>
 
-                  <label>
-                    Restoration Date
-                  </label>
-
-                  <div className="input-wrapper">
-
-                    <CalendarDays size={16} />
-
-                    <input
-                      type="date"
-                      name="restorationDate"
-                      value={formData.restorationDate}
-                      onChange={handleInputChange}
-                    />
-
-                  </div>
-
+                  <input
+                    type="date"
+                    name="restorationDate"
+                    value={formData.restorationDate}
+                    onChange={handleInputChange}
+                  />
                 </div>
-
-                {/* LATITUDE */}
 
                 <div className="form-field">
+                  <label>Latitude</label>
 
-                  <label>
-                    Latitude
-                  </label>
-
-                  <div className="input-wrapper">
-
-                    <MapPinned size={16} />
-
-                    <input
-                      type="number"
-                      step="any"
-                      name="latitude"
-                      value={formData.latitude}
-                      onChange={handleInputChange}
-                      placeholder="21.1702"
-                    />
-
-                  </div>
-
+                  <input
+                    type="number"
+                    name="latitude"
+                    value={formData.latitude}
+                    onChange={handleInputChange}
+                    placeholder="e.g. 21.9497"
+                    step="any"
+                  />
                 </div>
-
-                {/* LONGITUDE */}
 
                 <div className="form-field">
+                  <label>Longitude</label>
 
-                  <label>
-                    Longitude
-                  </label>
-
-                  <div className="input-wrapper">
-
-                    <MapPinned size={16} />
-
-                    <input
-                      type="number"
-                      step="any"
-                      name="longitude"
-                      value={formData.longitude}
-                      onChange={handleInputChange}
-                      placeholder="72.8311"
-                    />
-
-                  </div>
-
+                  <input
+                    type="number"
+                    name="longitude"
+                    value={formData.longitude}
+                    onChange={handleInputChange}
+                    placeholder="e.g. 89.1833"
+                    step="any"
+                  />
                 </div>
-
-                {/* GEOJSON */}
 
                 <div className="form-field full">
-
-                  <label>
-                    Project Boundary
-                  </label>
+                  <label>Project Boundary</label>
 
                   <label className="upload-box">
+                    <FileText size={24} />
+
+                    <span>
+                      {formData.geojson
+                        ? "GeoJSON uploaded successfully"
+                        : "Upload project boundary GeoJSON"}
+                    </span>
+
+                    <small>
+                      Supported format: .geojson
+                    </small>
 
                     <input
                       type="file"
-                      accept=".geojson,.json,application/geo+json,application/json"
+                      accept=".geojson,application/geo+json"
                       onChange={handleGeoJSON}
+                      hidden
                     />
-
-                    <Upload size={22} />
-
-                    <strong>
-                      {formData.geojson
-                        ? formData.geojson.name
-                        : "Upload GeoJSON Boundary"}
-                    </strong>
-
-                    <span>
-                      GeoJSON / JSON file • Project polygon
-                    </span>
-
                   </label>
-
                 </div>
-
               </div>
 
-              {/* FORM FOOTER */}
-
               <div className="modal-footer">
-
                 <div className="form-note">
-
-                  <ShieldCheck size={16} />
-
-                  <span>
-                    Submitted projects enter human verification review.
-                  </span>
-
+                  AI analysis will be performed after project submission.
                 </div>
 
                 <div className="modal-actions">
-
                   <button
                     type="button"
-                    className="cancel-button"
+                    className="secondary-button"
                     onClick={() => setShowProjectForm(false)}
                   >
                     Cancel
@@ -931,190 +1002,19 @@ function App() {
 
                   <button
                     type="submit"
-                    className="create-button"
+                    className="primary-button"
                   >
-                    <Plus size={17} />
+                    <Plus size={18} />
                     Create Project
                   </button>
-
                 </div>
-
               </div>
-
             </form>
-
           </div>
-
         </div>
-
       )}
-
     </div>
   );
-}
-
-
-/* ================================================= */
-/* COMPONENTS */
-/* ================================================= */
-
-function NavItem({
-  icon,
-  text,
-  active,
-}) {
-
-  return (
-
-    <div
-      className={`nav-item ${
-        active ? "active" : ""
-      }`}
-    >
-
-      {icon}
-
-      <span>
-        {text}
-      </span>
-
-    </div>
-
-  );
-
-}
-
-
-function StatCard({
-  icon,
-  label,
-  value,
-  change,
-  type,
-}) {
-
-  return (
-
-    <div className="stat-card">
-
-      <div
-        className={`stat-icon ${type}`}
-      >
-        {icon}
-      </div>
-
-      <div className="stat-content">
-
-        <span>
-          {label}
-        </span>
-
-        <div className="stat-value">
-
-          <strong>
-            {value}
-          </strong>
-
-          <small>
-            {change}
-          </small>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  );
-
-}
-
-
-function Factor({
-  name,
-  value,
-  progress,
-}) {
-
-  return (
-
-    <div className="factor">
-
-      <div className="factor-heading">
-
-        <span>
-          {name}
-        </span>
-
-        <strong>
-          {value}
-        </strong>
-
-      </div>
-
-      <div className="factor-bar">
-
-        <div
-          style={{
-            width: progress,
-          }}
-        ></div>
-
-      </div>
-
-    </div>
-
-  );
-
-}
-
-
-function ProjectRow({
-  id,
-  name,
-  location,
-  status,
-  icon,
-}) {
-
-  return (
-
-    <div className="project-row">
-
-      <div className="project-icon">
-        {icon}
-      </div>
-
-      <div className="project-info">
-
-        <strong>
-          {name}
-        </strong>
-
-        <span>
-          {id} • {location}
-        </span>
-
-      </div>
-
-      <span
-        className={`status ${
-          status === "Verified"
-            ? "verified"
-            : status === "Attention"
-              ? "attention"
-              : "review"
-        }`}
-      >
-
-        {status}
-
-      </span>
-
-    </div>
-
-  );
-
 }
 
 export default App;
