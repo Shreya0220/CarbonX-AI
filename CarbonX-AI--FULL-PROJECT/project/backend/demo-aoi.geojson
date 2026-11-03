@@ -1,0 +1,19 @@
+{
+  "type": "Feature",
+  "properties": {
+    "name": "CarbonX Demo Mangrove Project",
+    "claimed_area_ha": 25
+  },
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [88.8000, 21.9500],
+        [88.8020, 21.9500],
+        [88.8020, 21.9520],
+        [88.8000, 21.9520],
+        [88.8000, 21.9500]
+      ]
+    ]
+  }
+}
